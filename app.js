@@ -1,4 +1,27 @@
-var budgetController = (function () {})();
+var budgetController = (function () {
+  var Income = function (id, description, value) {
+    this.id = id;
+    this.description = id;
+    this.value = value;
+  };
+
+  var Expenses = function (id, description, value) {
+    this.id = id;
+    this.description = id;
+    this.value = value;
+  };
+
+  var data = {
+    allitems: {
+      inc: [],
+      exp: [],
+    },
+    total: {
+      inc: 0,
+      exp: 0,
+    },
+  };
+})();
 
 var UIController = (function () {
   var DOMStrings = {
@@ -17,15 +40,24 @@ var UIController = (function () {
       };
     },
 
-
-    getDOMStrings: function(){
-        return DOMStrings
-    }
-
+    getDOMStrings: function () {
+      return DOMStrings;
+    },
   };
 })();
 
 var appController = (function (budgetCtrl, UICtrl) {
+  var setUpEventListeners = function () {
+    var DOM = UICtrl.getDOMStrings();
+
+    document.querySelector(DOM.inputBtn).addEventListener("click", ctrlStuff);
+    document.addEventListener("keypress", function (event) {
+      if (event.keycode === 13 || event.which === 13) {
+        ctrlStuff();
+      }
+    });
+  };
+
   var ctrlStuff = function () {
     //get the input
 
@@ -41,12 +73,12 @@ var appController = (function (budgetCtrl, UICtrl) {
     // display the budget
   };
 
-  var DOM = UICtrl.getDOMStrings()
-
-  document.querySelector(DOM.inputBtn).addEventListener("click", ctrlStuff);
-  document.addEventListener("keypress", function (event) {
-    if (event.keycode === 13 || event.which === 13) {
-      ctrlStuff();
-    }
-  });
+  return {
+    init: function () {
+      console.log("fuck we on top");
+      setUpEventListeners();
+    },
+  };
 })(budgetController, UIController);
+
+appController.init();
