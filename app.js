@@ -11,6 +11,14 @@ var budgetController = (function () {
     this.value = value;
   };
 
+  var calculateTotal = function (type) {
+    var sum = 0;
+    data.allitems[type].forEach(function (current) {
+      sum = sum + current.value;
+    });
+    data.total[type] = sum;
+  };
+
   var data = {
     allitems: {
       inc: [],
@@ -20,6 +28,8 @@ var budgetController = (function () {
       inc: 0,
       exp: 0,
     },
+    budget: 0,
+    percentage: -1,
   };
 
   return {
@@ -39,6 +49,28 @@ var budgetController = (function () {
       data.allitems[type].push(newItem);
       return newItem;
     },
+
+    calculateBudget: function () {
+      //calculate the total inc and exp
+      calculateTotal("inc");
+      calculateTotal("exp");
+
+      //calculate the budget
+      data.budget = data.total.inc - data.total.exp;
+
+      // calculate the percentage
+      data.percentage = (data.total.exp / data.total.inc) * 100;
+    },
+
+    getbudget: function(){
+        return {
+            budget: data.budget,
+            totalInc: data.total.inc,
+            totalExp: data.total.exp,
+            percentage: data.percentage
+        }
+    }
+
   };
 })();
 
@@ -57,7 +89,7 @@ var UIController = (function () {
       return {
         type: document.querySelector(DOMStrings.inputtype).value,
         description: document.querySelector(DOMStrings.inputdescription).value,
-        value: document.querySelector(DOMStrings.inputvalue).value,
+        value: parseFloat(document.querySelector(DOMStrings.inputvalue).value),
       };
     },
 
@@ -79,6 +111,20 @@ var UIController = (function () {
       document.querySelector(element).insertAdjacentHTML("beforeend", newHtml);
     },
 
+    clearStuff: function () {
+      var fields, fieldarr;
+      fields = document.querySelectorAll(
+        DOMStrings.inputdescription + ", " + DOMStrings.inputvalue
+      );
+
+      fieldarr = Array.prototype.slice.call(fields);
+
+      fieldarr.forEach(function (current, index, array) {
+        current.value = "";
+      });
+      fieldarr[0].focus();
+    },
+
     getDOMStrings: function () {
       return DOMStrings;
     },
@@ -96,6 +142,15 @@ var appController = (function (budgetCtrl, UICtrl) {
       }
     });
   };
+  var calcBudget = function () {
+    // calculate the budget
+     budgetCtrl.calculateBudget();
+    // return the budget
+    var fbudget = budgetCtrl.getbudget()
+
+    // display on the UI
+    console.log(fbudget)
+  };
 
   var ctrlStuff = function () {
     //get the input
@@ -103,18 +158,21 @@ var appController = (function (budgetCtrl, UICtrl) {
     var input = UICtrl.getInput();
     console.log(input);
 
-    // add the item to the budget contoller
-    var addStuff = budgetCtrl.additem(
-      input.type,
-      input.description,
-      input.value
-    );
+    if (input.description != "" && !isNaN(input.value) && input.value > 0) {
+      // add the item to the budget contoller
+      var addStuff = budgetCtrl.additem(
+        input.type,
+        input.description,
+        input.value
+      );
 
-    // display the item in the UI
-       var listStuff = UICtrl.addList(addStuff, input.type)
-    // calculate the budget
+      // display the item in the UI
+      var listStuff = UICtrl.addList(addStuff, input.type);
+      UICtrl.clearStuff();
 
-    // display the budget
+      // call the calbudget function
+      calcBudget();
+    }
   };
 
   return {
