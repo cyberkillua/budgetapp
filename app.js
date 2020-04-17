@@ -49,7 +49,19 @@ var budgetController = (function () {
       data.allitems[type].push(newItem);
       return newItem;
     },
+    deleteItem: function (type, id) {
+      var ids, index;
 
+      ids = data.allitems[type].map(function (current) {
+        return current.id;
+      });
+
+      index - ids.indexOf(id);
+
+      if (index !== -1) {
+        data.allitems[type].splice(index, 1);
+      }
+    },
     calculateBudget: function () {
       //calculate the total inc and exp
       calculateTotal("inc");
@@ -85,6 +97,7 @@ var UIController = (function () {
     incomeLabel: ".budget__income--value",
     expensesLabel: ".budget__expenses--value",
     percentageLabel: ".budget__expenses--percentage",
+    container: ".container",
   };
 
   return {
@@ -101,17 +114,22 @@ var UIController = (function () {
       if (type === "inc") {
         element = DOMStrings.listincome;
         html =
-          '<div class="item clearfix" id="income-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button> </div></div></div>';
+          '<div class="item clearfix" id="inc-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button> </div></div></div>';
       } else if (type === "exp") {
         element = DOMStrings.listexpense;
         html =
-          '<div class="item clearfix" id="expense-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+          '<div class="item clearfix" id="exp-%id%"><div class="item__description">%description%</div><div class="right clearfix"><div class="item__value">%value%</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
       }
       newHtml = html.replace("%id%,", obj.id);
       newHtml = newHtml.replace("%description%", obj.description);
       newHtml = newHtml.replace("%value%", obj.value);
 
       document.querySelector(element).insertAdjacentHTML("beforeend", newHtml);
+    },
+
+    deleteStuff: function (selectorID) {
+      var el = document.getElementById(selectorID);
+      el.parentNode.removeChild(el);
     },
 
     clearStuff: function () {
@@ -134,11 +152,12 @@ var UIController = (function () {
       document.querySelector(DOMStrings.expensesLabel).textContent =
         obj.totalExp;
 
-      if (obj.percentage > 0 && obj.percentage < 100000 ) {
+      if (obj.percentage > 0 && obj.percentage < 100000) {
         document.querySelector(DOMStrings.percentageLabel).textContent =
           obj.percentage + "%";
-      }else{document.querySelector(DOMStrings.percentageLabel).textContent = "---";}
-      
+      } else {
+        document.querySelector(DOMStrings.percentageLabel).textContent = "---";
+      }
     },
 
     getDOMStrings: function () {
@@ -156,6 +175,7 @@ var appController = (function (budgetCtrl, UICtrl) {
       if (event.keycode === 13 || event.which === 13) {
         ctrlStuff();
       }
+      document.querySelector(DOM.container).addEventListener("click", dltItem);
     });
   };
   var calcBudget = function () {
@@ -191,7 +211,19 @@ var appController = (function (budgetCtrl, UICtrl) {
       calcBudget();
     }
   };
+  var dltItem = function (event) {
+    var itemID, type, ID, splitItem;
+    itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+    if (itemID) {
+      splitItem = itemID.split("-");
+      type = splitItem[0];
+      ID = parseInt(splitItem[1]);
+    }
 
+    budgetCtrl.deleteItem(type, ID);
+    UICtrl.deleteStuff(itemID);
+    calcBudget();
+  };
   return {
     init: function () {
       console.log("fuck we on top");
